@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- Política de seguridad: el navegador solo deja que la página cargue código propio y se conecte con
+     YouTube y Google Fonts. Así la voz de nadie sale de su navegador (ver CONTRIBUTING.md). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://i.ytimg.com; media-src 'self' blob:; connect-src 'self' https://www.youtube.com; frame-src https://www.youtube-nocookie.com https://www.youtube.com; object-src 'none'; base-uri 'self'; form-action 'none'">
+<title>Entona</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23D2356E' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M7 3v7a5 5 0 0 0 10 0V3M12 15v6'/%3E%3C/svg%3E">
+<script src="js/redirigir.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/entona.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M7 3v7a5 5 0 0 0 10 0V3M12 15v6"/></svg>
+      Entona
+    </div>
+    <nav class="tabs" aria-label="Secciones">
+      <button type="button" data-seccion="aprender">Aprender</button>
+      <button type="button" data-seccion="practicar">Practicar</button>
+      <button type="button" data-seccion="karaoke">Karaoke</button>
+    </nav>
+    <div class="avance"><span>Hoy <b id="xpHoy">0 / 20 XP</b></span><span>Racha <b id="racha">0 días</b></span><span>Estrellas <b id="totalEstrellas">0</b></span></div>
+    <div class="mic">
+      <div class="mic-state"><div class="level" aria-hidden="true"><i id="levelBar"></i></div><span id="micText">Micrófono apagado</span></div>
+      <button class="btn quiet icono" id="micAjustes" type="button" aria-expanded="false" aria-controls="panelMic" title="Ajustes del micrófono y ruido de fondo" aria-label="Ajustes del micrófono">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+      </button>
+      <button class="btn primary" id="micBtn" type="button">Activar micrófono</button>
+    </div>
+  </header>
+
+  <!-- ===== Ajustes del micrófono: ruido de fondo y sensibilidad ===== -->
+  <section class="panel-mic" id="panelMic" hidden aria-label="Ajustes del micrófono">
+    <div class="pm-vivo">
+      <span class="label">Lo que oye Entona</span>
+      <div class="pm-barra"><i id="pmNivel"></i><b id="pmUmbral"></b></div>
+      <p class="pm-estado" id="pmEstado" aria-live="polite">Micrófono apagado</p>
+      <small>La barra es el volumen del micrófono. Solo cuenta como voz lo que pasa la línea y tiene un tono claro y estable.</small>
+    </div>
+    <div class="set">
+      <span class="label">Ruido de la sala</span>
+      <button class="btn" id="pmMedir" type="button" style="align-self:flex-start">Medir ruido</button>
+      <small id="pmRuido"></small>
+    </div>
+    <div class="set">
+      <span class="label">Sensibilidad</span>
+      <div class="seg" data-key="sensib"><button type="button" data-v="alta">Alta</button><button type="button" data-v="normal">Normal</button><button type="button" data-v="baja">Baja</button></div>
+      <small>Baja: solo cuenta la voz fuerte, para lugares ruidosos. Alta: capta voces suaves, pero también más ruido.</small>
+    </div>
+    <div class="set">
+      <label class="ctl check"><input type="checkbox" id="pmFiltro"><span>Filtro de ruido del navegador</span></label>
+      <small>Atenúa ruidos constantes, como ventiladores o el aire acondicionado. Si te corta las notas largas, desactívalo.</small>
+    </div>
+    <button class="btn quiet icono pm-cerrar" id="pmCerrar" type="button" aria-label="Cerrar ajustes del micrófono">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </section>
+
+  <!-- ===== Aprender: camino del curso y lección abierta ===== -->
+  <div id="seccionAprender" hidden>
+    <div class="aprender" id="mapaCurso"></div>
+    <div class="lec" id="leccion" hidden>
+      <div class="lec-top">
+        <button class="btn quiet lec-x" id="lecSalir" type="button" aria-label="Salir de la lección">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <div class="lec-prog" role="presentation"><i id="lecBarra"></i></div>
+      </div>
+      <div class="lec-cuerpo" id="lecCuerpo"></div>
+      <div class="lec-pie" id="lecPie" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <!-- ===== Karaoke: galería de canciones ===== -->
+  <div class="karaoke" id="seccionKaraoke" hidden>
+    <div class="k-cab">
+      <div class="lh-text">
+        <p class="eyebrow">Karaoke</p>
+        <h1>Canta y mira tu puntaje</h1>
+        <p class="tip">Agrega una canción de YouTube: Entona la escucha una vez, saca la melodía y después la cantas sobre el video. Al final ves qué parte de la melodía cantaste afinada.</p>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="kAgregarYT" type="button">+ Canción de YouTube</button>
+        <button class="btn" id="kAgregarArchivo" type="button">+ Desde un archivo</button>
+      </div>
+    </div>
+    <section aria-labelledby="kTusTit">
+      <h2 class="k-sub" id="kTusTit">Tus canciones</h2>
+      <div class="k-grid" id="kGrid"></div>
+    </section>
+    <section aria-labelledby="kInclTit">
+      <h2 class="k-sub" id="kInclTit">Canciones incluidas</h2>
+      <div class="k-grid" id="kIncluidas"></div>
+    </section>
+  </div>
+
+  <div class="layout" id="seccionPracticar">
+    <nav class="path" id="ruta" aria-label="Lecciones y canciones"></nav>
+
+    <main class="stage">
+      <!-- ===== Vista de práctica ===== -->
+      <div class="vista" id="vistaPractica">
+        <button class="btn quiet volver" data-volver="karaoke" type="button" hidden>← Todas las canciones</button>
+        <div class="lesson-head">
+          <div class="lh-text">
+            <p class="eyebrow" id="piezaEtiqueta"></p>
+            <h1 id="piezaNombre"></h1>
+            <p class="tip" id="piezaTip"></p>
+          </div>
+          <div class="seg" id="modoSeg" role="group" aria-label="Modo de práctica"></div>
+        </div>
+        <p class="status" id="status" aria-live="polite"></p>
+
+        <section class="readout" aria-label="Lectura en vivo">
+          <div class="box you empty" id="youBox">
+            <span class="label">Tu voz</span>
+            <div class="note" id="youNote">–</div>
+            <div class="hz" id="youHz">— Hz</div>
+          </div>
+          <div class="meter">
+            <div class="hint" id="hint" aria-live="polite"></div>
+            <div class="track"><div class="zone" id="zone"></div><div class="mid"></div><div class="needle" id="needle"></div></div>
+            <div class="scale"><span id="scaleLo">−100 cents</span><span>más grave ◂ ▸ más agudo</span><span id="scaleHi">+100</span></div>
+          </div>
+          <div class="box goal" id="goalBox">
+            <span class="label" id="goalLabel">Objetivo</span>
+            <div class="note" id="goalNote">–</div>
+            <div class="hz" id="goalHz"></div>
+          </div>
+        </section>
+
+        <section id="mapWrap" aria-label="Notas de la melodía">
+          <div class="map-head"><span class="label">Notas de la melodía</span><span class="count" id="count"></span></div>
+          <div class="map-scroll" id="mapScroll"><div class="map" id="map"></div></div>
+        </section>
+
+        <section class="transporte" id="transporte" aria-label="Reproducción">
+          <button class="btn primary" id="play" type="button">Empezar</button>
+          <button class="btn quiet" id="alInicio" type="button">Al inicio</button>
+          <div class="barra"><input type="range" id="barra" min="0" max="100" step="0.05" value="0" aria-label="Posición en la canción"></div>
+          <span class="tiempo" id="tiempo">0:00 / 0:00</span>
+        </section>
+
+        <div class="escena" id="escena">
+          <section class="yt-box" id="ytBox" hidden aria-label="Video de YouTube"><div class="yt-marco"><div id="ytKaraoke"></div></div></section>
+          <section class="roll" id="rollBox">
+            <canvas id="roll" aria-label="Rollo de piano con tu voz en vivo"></canvas>
+            <div class="veil" id="veil"></div>
+          </section>
+        </div>
+
+        <div class="controls" id="ctrlRitmo">
+          <button class="btn" id="hearNote" type="button">Escuchar nota</button>
+          <button class="btn" id="hearAll" type="button">Escuchar melodía</button>
+          <button class="btn quiet" id="restart" type="button">Reiniciar</button>
+          <button class="btn quiet" id="skip" type="button">Saltar nota</button>
+        </div>
+
+        <div class="controls" id="ctrlTiempo">
+          <div class="ctl"><span>Velocidad</span>
+            <div class="seg" data-key="vel"><button type="button" data-v="0.6">60 %</button><button type="button" data-v="0.8">80 %</button><button type="button" data-v="1">100 %</button></div>
+          </div>
+          <label class="ctl" id="ctlPista"><span>Canción</span><input type="range" id="volPista" min="0" max="1" step="0.05"></label>
+          <label class="ctl"><span id="volGuiaTxt">Guía</span><input type="range" id="volGuia" min="0" max="1" step="0.05"></label>
+          <label class="ctl check" id="ctlMetro"><input type="checkbox" id="metronomo"><span>Metrónomo</span></label>
+        </div>
+
+        <section class="editor" id="editor" aria-label="Editor de notas">
+          <p id="edAyuda">Haz clic en una nota para seleccionarla; con Mayús + clic seleccionas un tramo. Las flechas ↑ ↓ cambian el tono, ← → pasan a la nota vecina y Supr borra. Clic en un espacio vacío mueve el cursor.</p>
+          <div class="grupo"><span class="label" id="edSelTxt">Sin selección</span>
+            <button class="btn small" data-ed="tono:-12" type="button">Octava ↓</button>
+            <button class="btn small" data-ed="tono:-1" type="button">Semitono ↓</button>
+            <button class="btn small" data-ed="tono:1" type="button">Semitono ↑</button>
+            <button class="btn small" data-ed="tono:12" type="button">Octava ↑</button>
+            <button class="btn small" data-ed="dur:-0.05" type="button">Acortar</button>
+            <button class="btn small" data-ed="dur:0.05" type="button">Alargar</button>
+            <button class="btn small" data-ed="mover:-0.05" type="button">◂ Antes</button>
+            <button class="btn small" data-ed="mover:0.05" type="button">Después ▸</button>
+            <button class="btn small danger" data-ed="borrar" type="button">Borrar</button>
+          </div>
+          <div class="grupo"><span class="label">Toda la canción</span>
+            <button class="btn small" data-ed="agregar" type="button">Agregar nota en el cursor</button>
+            <button class="btn small" data-ed="todo" type="button">Seleccionar todo</button>
+            <button class="btn small" data-ed="cortas" type="button">Quitar notas muy cortas</button>
+            <button class="btn small" data-ed="deshacer" type="button">Deshacer</button>
+          </div>
+          <div class="grupo"><span class="label">Canción</span>
+            <input type="text" id="edNombre" maxlength="80" aria-label="Nombre de la canción">
+            <button class="btn small" id="edExportar" type="button">Exportar .json</button>
+            <button class="btn small" id="edRedetectar" type="button">Volver a detectar</button>
+            <button class="btn small danger" id="edBorrar" type="button">Borrar canción</button>
+          </div>
+        </section>
+
+        <section class="settings" aria-label="Ajustes">
+          <div class="set" id="setTono">
+            <span class="label" id="tonLabel">Tono de inicio</span>
+            <div class="stepper">
+              <button class="btn" id="tonDown" type="button" aria-label="Bajar">−</button>
+              <output id="tonOut"></output>
+              <button class="btn" id="tonUp" type="button" aria-label="Subir">+</button>
+              <div class="seg" data-key="tonic" id="tonPre"><button type="button" data-v="48">Grave</button><button type="button" data-v="55">Media</button><button type="button" data-v="60">Aguda</button></div>
+            </div>
+            <button class="btn" id="calBtn" type="button" style="align-self:flex-start">Detectar con mi voz</button>
+            <small id="tonNota">Mueve todos los ejercicios a la zona cómoda de tu voz.</small>
+          </div>
+          <div class="set">
+            <span class="label">Exigencia</span>
+            <div class="seg" data-key="tol"><button type="button" data-v="50">Amable</button><button type="button" data-v="35">Normal</button><button type="button" data-v="20">Exigente</button></div>
+            <small id="tolNote"></small>
+            <label class="ctl check"><input type="checkbox" id="octLibre"><span>Aceptar la nota en cualquier octava</span></label>
+          </div>
+          <div class="set">
+            <span class="label">Guía sonora en «A tu ritmo»</span>
+            <div class="seg" data-key="guia"><button type="button" data-v="each">Cada nota</button><button type="button" data-v="first">La primera</button><button type="button" data-v="none">Ninguna</button></div>
+            <small>Mientras suena la guía, el micrófono no cuenta.</small>
+          </div>
+          <div class="set">
+            <span class="label">Salida de audio</span>
+            <div class="seg" data-key="salida"><button type="button" data-v="audifonos">Audífonos</button><button type="button" data-v="parlantes">Parlantes</button></div>
+            <small>Con parlantes se activa la cancelación de eco para que el micrófono no confunda la música con tu voz. Con audífonos la lectura es más limpia.</small>
+          </div>
+          <div class="set">
+            <span class="label">Nombres de las notas</span>
+            <div class="seg" data-key="nombres"><button type="button" data-v="solf">Do Re Mi</button><button type="button" data-v="abc">C D E</button></div>
+            <small>El número es la octava: La4 = 440 Hz.</small>
+          </div>
+        </section>
+      </div>
+
+      <!-- ===== Vista de importación ===== -->
+      <div class="vista" id="vistaImportar" hidden>
+        <button class="btn quiet volver" data-volver="karaoke" type="button" hidden>← Todas las canciones</button>
+        <div class="lh-text">
+          <p class="eyebrow">Mis canciones</p>
+          <h1 id="impTitulo">Importar una canción</h1>
+          <p class="tip" id="impIntro"></p>
+        </div>
+        <div class="form">
+          <div class="seg" id="impFuente" role="group" aria-label="De dónde viene la canción">
+            <button type="button" data-v="youtube">Video de YouTube</button><button type="button" data-v="archivo">Archivo de audio</button>
+          </div>
+          <div class="campo" id="ytCampo">
+            <label class="label" for="ytUrl">Enlace del video</label>
+            <div class="row">
+              <input type="url" id="ytUrl" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" spellcheck="false">
+              <button class="btn" id="ytCargar" type="button">Cargar video</button>
+            </div>
+            <small>Funcionan mejor los videos con la voz clara y poco acompañamiento: versiones acústicas, en vivo con la voz al frente o voces aisladas.</small>
+          </div>
+          <div class="yt-box" id="ytPrevia" hidden><div class="yt-marco"><div id="ytImp"></div></div></div>
+          <div class="soltar" id="soltar">
+            <strong id="impArchivo">Ningún archivo elegido</strong>
+            <span class="row">
+              <button class="btn" id="impElegir" type="button">Elegir archivo</button>
+              <small style="color:var(--muted)">MP3, WAV, M4A, OGG o FLAC, hasta 10 minutos. También un .json de Entona.</small>
+            </span>
+            <input type="file" id="impInput" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.json,application/json" hidden>
+          </div>
+          <div class="campo">
+            <label class="label" for="impNombre">Nombre</label>
+            <input type="text" id="impNombre" maxlength="80" placeholder="Nombre de la canción">
+          </div>
+          <div class="campo">
+            <span class="label">Voz de la grabación</span>
+            <div class="seg" data-imp="voz"><button type="button" data-v="auto">No sé</button><button type="button" data-v="grave">Grave</button><button type="button" data-v="aguda">Aguda</button></div>
+            <small>Acota dónde buscar la melodía. Si no estás seguro, déjalo en «No sé».</small>
+          </div>
+          <div class="campo">
+            <label class="ctl check"><input type="checkbox" id="impCentro" checked><span>Realzar lo que suena al centro</span></label>
+            <small>En casi todas las grabaciones de estudio la voz va al centro y los instrumentos a los lados. Desmárcalo si la voz suena solo por un lado.</small>
+          </div>
+          <div class="campo">
+            <label class="label" for="impSens">Sensibilidad</label>
+            <input type="range" id="impSens" min="1" max="5" step="1" value="3" style="max-width:260px">
+            <small>Más alta detecta más notas, pero también confunde más instrumentos con la voz.</small>
+          </div>
+          <div class="campo" id="ytOpciones">
+            <label class="ctl check"><input type="checkbox" id="ytRapido"><span>Escuchar al doble de velocidad</span></label>
+            <small>Tarda la mitad, pero la melodía sale algo menos precisa.</small>
+          </div>
+          <div class="aviso" id="ytComo">
+            <b>Cómo funciona.</b> Entona no descarga el video: lo reproduce aquí mismo y escucha el audio de esta pestaña mientras suena, una sola vez. Al pulsar el botón, el navegador te preguntará qué compartir: elige <b>esta pestaña</b> y deja marcado <b>«Compartir también el audio de la pestaña»</b>. El audio se analiza en tu navegador y no se guarda; solo se guardan las notas.
+          </div>
+          <p class="aviso">Con voz sola, o voz con poco acompañamiento, la melodía sale casi exacta. Con una banda completa sale aproximada: en los tramos sin voz suele seguir a algún instrumento y hay que borrar esas notas en el editor.</p>
+          <div id="impProgreso" hidden>
+            <div class="progreso"><i id="impBarra"></i></div>
+            <small id="impEtapa" style="color:var(--muted)"></small>
+          </div>
+          <p class="error" id="impError" hidden></p>
+          <div class="row">
+            <button class="btn primary" id="impAnalizar" type="button" disabled>Detectar la melodía</button>
+            <button class="btn" id="ytTerminar" type="button" hidden>Terminar aquí</button>
+            <button class="btn quiet" id="impCancelar" type="button">Volver</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<audio id="pista" preload="auto"></audio>
+
+<script src="js/nucleo.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/contenido.js"></script>
+<script src="js/biblioteca.js"></script>
+<script src="js/melodia.js"></script>
+<script src="js/rollo.js"></script>
+<script src="js/youtube.js"></script>
+<script src="js/curso.js"></script>
+<script src="js/lecciones.js"></script>
+<script src="js/practica.js"></script>
+<script src="js/interfaz.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/importar.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

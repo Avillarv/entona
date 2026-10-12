@@ -1,0 +1,15 @@
+{
+  "name": "entona",
+  "version": "1.0.0",
+  "description": "Entrenador de canto en el navegador: curso desde cero, práctica con micrófono y karaoke con YouTube.",
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "servir": "python3 -m http.server 8000 --bind 127.0.0.1",
+    "test": "playwright test",
+    "test:sin-red": "SIN_RED=1 playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1"
+  }
+}

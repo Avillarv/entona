@@ -14,9 +14,11 @@ async function abrir(page, estado = {}) {
   await page.addInitScript(() => {
     document.addEventListener('securitypolicyviolation', e => console.error('CSP: ' + e.violatedDirective + ' ' + e.blockedURI));
   });
-  await page.goto('/');
+  // El estado se escribe desde una página del mismo sitio que no carga la aplicación: si se escribiera
+  // con Entona abierta, su arranque podría sobrescribirlo antes de recargar.
+  await page.goto('/css/entona.css');
   await page.evaluate(e => { localStorage.clear(); localStorage.setItem('entona.v2', JSON.stringify(e)); }, estado);
-  await page.reload();
+  await page.goto('/');
   await page.waitForFunction(() => window.Entona && Entona.S.pieza && Entona.app.irSeccion);
   return errores;
 }

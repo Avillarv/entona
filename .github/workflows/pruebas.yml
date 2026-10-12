@@ -21,7 +21,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm test
+      # La prueba con un video real se salta aquí: el sitio de videos suele bloquear la reproducción
+      # desde servidores de centros de datos. Se corre en local con `npm test`.
+      - run: npm run test:sin-red
       - name: Guardar resultados si algo falló
         if: failure()
         uses: actions/upload-artifact@v4
